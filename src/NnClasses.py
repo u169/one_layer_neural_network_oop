@@ -5,14 +5,14 @@ random.seed(0)
 
 class Layer:
 
-    def __init__(self, length, activation_function, back_function):
+    def __init__(self, length, activation_function, back_activation_function):
         self.neurons = list()
 
         self.activation_function = activation_function
-        self.back_function = back_function
+        self.back_activation_function = back_activation_function
 
         for _ in range(length + 1):
-            neuron = Neuron(back_function)
+            neuron = Neuron(back_activation_function)
             self.neurons.append(neuron)
 
     def out(self, data: list):
@@ -27,44 +27,40 @@ class Layer:
         return self.activation_function(sum(results))
 
     def retrain(self, data, expected):
-        outs = list()
+        out = self.activation_function(
+            sum(
+                [neuron.out(d)
+                 for neuron, d
+                 in zip(self.neurons, data)]
+            ))
 
-        for i in range(len(data)):
-            neuron = self.neurons[i]
-            d = data[i]
-            out = neuron.out(d)
-            outs.append(out)
-
-        out = self.activation_function(sum(outs))
         error = expected - out
-        b_error = self.back_function(error)
+        b_error = self.back_activation_function(error)
 
-        for i in range(len(data)):
-            neuron = self.neurons[i]
-            d = data[i]
+        for neuron in self.neurons:
             neuron.retrain(b_error)
 
-        error = sum([n._error for n in self.neurons])/len(self.neurons)
-        print("Error: {}".format(error))
+        avg_error = sum([n._last_error for n in self.neurons])/len(self.neurons)
+        return avg_error
 
 
 class Neuron:
 
-    def __init__(self, back_function):
+    def __init__(self, back_activation_function):
         self.weight = random.random() * 2 - 1
 
-        self.back_function = back_function
+        self.back_activation_function = back_activation_function
 
         self.__last_in = None
         self.__last_out = None
-        self._error = None
+        self._last_error = None
 
     def out(self, data):
         self.__last_in = data
         self.__last_out = self.weight * data
         return self.__last_out
 
-    def retrain(self, b_e_d):
-        self._error = b_e_d
-        adjustment = self.__last_in * b_e_d
+    def retrain(self, error):
+        self._last_error = error
+        adjustment = self.__last_in * error
         self.weight += adjustment

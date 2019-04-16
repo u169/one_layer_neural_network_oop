@@ -15,20 +15,21 @@ def input_expected():
 
 
 def main():
-    retrain_range = 10000
+    retrain_range = 1000
 
-    def a_f(x): return 1 / (1 + 2.71828**(-x))
+    def activation_function(x): return 1 / (1 + 2.71828**(-x))
 
-    # def b_f(x): return x
-    def b_f(x): return (x**2) * [-1, 1][x > 0]
-    # def b_f(x): return x * (1 - x)
+    # def back_activation_function(x): return x
+    def back_activation_function(x): return (x**2) * [-1, 1][x > 0]
+    # def back_activation_function(x): return x * (1 - x)
 
-    layer = Layer(2, a_f, b_f)
+    layer = Layer(2, activation_function, back_activation_function)
 
     for _ in range(retrain_range):
-        i, e = input_expected()
-        layer.out(i)
-        layer.retrain(i, e)
+        data, expected = input_expected()
+        layer.out(data)
+        error = layer.retrain(data, expected)
+        print('Error: {}'.format(error))
 
     print([n.weight for n in layer.neurons])
 
