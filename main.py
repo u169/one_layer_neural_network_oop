@@ -15,7 +15,7 @@ def input_expected():
 
 
 def main():
-    retrain_range = 1000
+    retrain_range = 5000
 
     def activation_function(x): return 1 / (1 + 2.71828**(-x))
 
@@ -27,9 +27,8 @@ def main():
 
     for _ in range(retrain_range):
         data, expected = input_expected()
-        layer.out(data)
-        error = layer.retrain(data, expected)
-        print('Error: {}'.format(error))
+        error = layer.train(data, expected)
+        print('In: {}\tExpected: {}\tError: {}'.format(data, expected, error))
 
     print([n.weight for n in layer.neurons])
 

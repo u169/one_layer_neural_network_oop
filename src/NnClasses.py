@@ -11,37 +11,30 @@ class Layer:
         self.activation_function = activation_function
         self.back_activation_function = back_activation_function
 
-        for _ in range(length + 1):
+        for _ in range(length + 1):                         # "+ 1" <- bias
             neuron = Neuron(back_activation_function)
             self.neurons.append(neuron)
 
     def out(self, data: list):
-        results = list()
+        data_with_bias = [1] + data
 
-        data.insert(0, 1)
-
-        for neuron_data, neuron in zip(data, self.neurons):
-            out = neuron.out(neuron_data)
-            results.append(out)
-
-        return self.activation_function(sum(results))
-
-    def retrain(self, data, expected):
-        out = self.activation_function(
+        return self.activation_function(
             sum(
                 [neuron.out(d)
                  for neuron, d
-                 in zip(self.neurons, data)]
+                 in zip(self.neurons, data_with_bias)]
             ))
 
-        error = expected - out
-        b_error = self.back_activation_function(error)
+    def train(self, data, expected):
+        out = self.out(data)
+
+        out_error = self.back_activation_function(expected - out)
 
         for neuron in self.neurons:
-            neuron.retrain(b_error)
+            neuron.train(out_error)
 
-        avg_error = sum([n._last_error for n in self.neurons])/len(self.neurons)
-        return avg_error
+        error = sum([n._last_error for n in self.neurons])/len(self.neurons)
+        return error
 
 
 class Neuron:
@@ -60,7 +53,7 @@ class Neuron:
         self.__last_out = self.weight * data
         return self.__last_out
 
-    def retrain(self, error):
+    def train(self, error):
         self._last_error = error
         adjustment = self.__last_in * error
         self.weight += adjustment
